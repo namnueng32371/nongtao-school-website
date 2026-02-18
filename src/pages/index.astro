@@ -1,18 +1,59 @@
 ---
+// 1. เตรียมข้อมูล (Preparation Phase)
 
+// -> ตอนนี้ 'query' เป็นแค่ตัวแปร String ใน RAM เครื่องเรา
+const query = `
+	query GetSchoolSettings {
+		generalSettings {
+			title
+			description
+		}
+	}
+`;
+// -> อ่านค่า URL (เช่น https://api.nongtao.ac.th/graphql) มาเก็บไว้
+const url = import.meta.env.PUBLIC_WORDPRESS_API_URL;
+
+let schoolData = null; // สร้างตัวแปรรอไว้ก่อน (ค่าเริ่มต้นเป็น null)
+let errorMessage = null; // เอาไว้เก็บข้อความ Error
+
+try{
+	// 2.fetch ขอข้อมูลใน data หลังบ้าน(wordpress subdomain)
+	// HTTP Request Packet
+	const response = await fetch(url,  {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify({query})
+		// แปลงข้อมูล ในตัว body จาก JS > JSON 
+	});
+	// -> Browser/Node.js สร้าง HTTP Request วิ่งผ่าน DNS -> IP Address -> Server
+	// -> WordPress Server รับเรื่อง -> รัน PHP -> Query MySQL -> สร้าง JSON ตอบกลับ
+
+	// 3. เช็คบัตรผ่านทาง (HTTP Status)
+  	// response.ok จะเป็น true ถ้า status คือ 200-299	
+	if(!response.ok){
+		throw new Error(`Server ตอบกลับผิดปกติ: ${response.status}`);
+		// การ throw คือการกระโดดไปที่ catch ทันที
+	}
+	
+	// 4. สั่งอ่าน Stream ข้อมูลทั้งหมดจนจบ (Download Body)
+	const json = await response.json();
+	// -> Parse String เปลี่ยน JSON เป็น JavaScript Object ( { data: ... } )
+
+	// 5. เช็คว่า WordPress ด่ากลับมาไหม? (GraphQL Errors)
+  	// บางทีส่ง 200 OK แต่ในเนื้อหาบอกว่า "Query ผิดนะ"
+  	if (json.errors) {
+    throw new Error(`GraphQL ฟ้องว่า: ${json.errors[0].message}`);
+  	}
+	// 6. หยิบของออกมาวาง (เข้าถึงข้อมูลตามชั้น)
+	// สูตรคือ: json -> data -> generalSettings
+	schoolData = json.data.generalSettings;
+	} catch (error) {
+	// 7. โซนรับจบ (ถ้าพังตรงไหนก็ตาม จะมาตกที่นี่)
+	console.error("💥 พังยับเลยครับอาจารย์:", error);
+    errorMessage = "ขออภัย ไม่สามารถดึงข้อมูลโรงเรียนได้ในขณะนี้";
+	}
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-		<p>Hi</p>
-	</body>
-</html>
+
