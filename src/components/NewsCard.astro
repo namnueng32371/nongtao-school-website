@@ -1,0 +1,51 @@
+---
+// src/components/NewsCard.astro
+const { title, image, date, slug } = Astro.props;
+
+// แปลงวันที่เป็น พ.ศ. (Thai Buddhist Calendar)
+const thaiDate = new Date(date).toLocaleDateString("th-TH", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+});
+---
+
+<div
+    class="flex flex-col h-full bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300"
+>
+    {/* [ข้อมูลส่วนที่ 1: รูปภาพ] */}
+    <div class="relative aspect-video overflow-hidden rounded-t-2xl">
+        <img
+            src={image || "/images/default-news.jpg"}
+            alt={title}
+            class="w-full h-full object-cover"
+        />
+    </div>
+
+    <div class="p-5 flex flex-col flex-grow">
+        {
+            /* [ข้อมูลส่วนที่ 2: วันที่] - วางไว้บนสุดของเนื้อหาเพื่อให้อ่านง่าย */
+        }
+        <span
+            class="text-blue-600 text-xs font-bold uppercase tracking-wider mb-2"
+        >
+            📅 {thaiDate}
+        </span>
+
+        {
+            /* [ข้อมูลส่วนที่ 3: ชื่อเรื่อง] - ใช้ line-clamp เพื่อไม่ให้ตัวหนังสือล้นจนการ์ดไม่เท่ากัน */
+        }
+        <h3 class="text-lg font-bold text-slate-900 leading-snug line-clamp-2">
+            {title}
+        </h3>
+
+        <div class="mt-auto pt-4">
+            <a
+                href={`/news/${slug}`}
+                class="text-sm font-medium text-slate-500 hover:text-blue-600"
+            >
+                อ่านเพิ่มเติม →
+            </a>
+        </div>
+    </div>
+</div>

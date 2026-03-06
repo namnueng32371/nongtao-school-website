@@ -1,94 +1,122 @@
 ---
-// 1. เตรียมข้อมูล (Preparation Phase)
-// -> ตอนนี้ 'query' เป็นแค่ตัวแปร String ใน RAM เครื่องเรา
+/*  import  */
+import Layout from "../layouts/Layout.astro";
+import NewsCard from "../components/NewsCard.astro";
+
+/*  constants query   */
 const query = `
-	query GetSchoolSettings {
-		generalSettings {
-			title
-			description
-		}
-	}
+    query GetHomeData {
+        generalSettings {
+            title
+            description
+        }
+        posts(first: 4) {
+            nodes {
+                slug        
+                title   
+                date      
+                featuredImage { 
+                    node {
+                        sourceUrl 
+                    }
+                }
+            }
+        }
+    }
 `;
-// -> อ่านค่า URL (เช่น https://api.nongtao.ac.th/graphql) มาเก็บไว้
+
+/* variables & API URL & Type security */
 const url = import.meta.env.PUBLIC_WORDPRESS_API_URL;
+let schoolData = null;
+let errorMessage = null;
+let posts = [];
 
-let schoolData = null; // สร้างตัวแปรรอไว้ก่อน (ค่าเริ่มต้นเป็น null)
-let errorMessage = null; // เอาไว้เก็บข้อความ Error
-
+type PostType = {
+	title: string;
+	slug: string;
+	date: string;
+	featuredImage: any;
+};
+/* logic Fetch API */
 try {
-	// 2.fetch ขอข้อมูลใน data หลังบ้าน(wordpress subdomain)
-	// HTTP Request Packet
 	const response = await fetch(url, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
 		},
 		body: JSON.stringify({ query }),
-		// แปลงข้อมูล ในตัว body จาก Js > JSON
 	});
-	// -> Browser/Node.js สร้าง HTTP Request วิ่งผ่าน DNS -> IP Address -> Server
-	// -> WordPress Server รับเรื่อง -> รัน PHP -> Query MySQL -> สร้าง JSON ตอบกลับ
 
-	// 3. เช็คบัตรผ่านทาง (HTTP Status)
-	// response.ok จะเป็น true ถ้า status คือ 200-299
 	if (!response.ok) {
 		throw new Error(`Server ตอบกลับผิดปกติ: ${response.status}`);
-		// การ throw คือการกระโดดไปที่ catch ทันที
 	}
 
-	// 4. สั่งอ่าน Stream ข้อมูลทั้งหมดจนจบ (Download Body)
 	const json = await response.json();
-	// -> Parse String เปลี่ยน JSON เป็น JavaScript Object ( { data: ... } )
 
-	// 5. เช็คว่า WordPress ด่ากลับมาไหม? (GraphQL Errors)
-	// บางทีส่ง 200 OK แต่ในเนื้อหาบอกว่า "Query ผิดนะ"
 	if (json.errors) {
 		throw new Error(`GraphQL ฟ้องว่า: ${json.errors[0].message}`);
 	}
-	// 6. หยิบของออกมาวาง (เข้าถึงข้อมูลตามชั้น)
-	// สูตรคือ: json -> data -> generalSettings
 	schoolData = json.data.generalSettings;
+	posts = json.data.posts.nodes;
 } catch (error) {
-	// 7. โซนรับจบ (ถ้าพังตรงไหนก็ตาม จะมาตกที่นี่)
 	console.error("💥 พังยับเลยครับอาจารย์:", error);
 	errorMessage = "ขออภัย ไม่สามารถดึงข้อมูลโรงเรียนได้ในขณะนี้";
 }
-console.log("เช็คของหน่อยอาจารย์:", schoolData);
+console.log("เช็คpost: ", posts);
 ---
 
-<html lang="th">
-	<head>
+<!-- HTML -->
+<Layout title="Home Page">
+	<!-- <html lang="th"> --><!-- <head>
 		<meta charset="utf-8" />
 		<meta name="description" content={schoolData?.description} />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>{schoolData?.title || "กำลังโหลด..."}</title>
-	</head>
-	<body class="bg-gray-100 p-10 font-sans">
-		{
-			errorMessage && (
+	</head> -->
+	{
+		errorMessage && (
+			<>
 				<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
 					<strong>โอ๊ะ!</strong> {errorMessage}
 				</div>
-			)
-		}
+			</>
+		)
+	}
 
-		{
-			schoolData && (
-				<div class="max-w-2xl mx-auto bg-white shadow-xl rounded-2xl p-8 text-center">
-					<h1 class="text-4xl font-bold text-blue-900 mb-2">
-						{schoolData.title}
-					</h1>
-					<p class="text-gray-600 text-lg italic">
-						{schoolData.description}
-					</p>
+	{
+		schoolData && (
+			<>
+				<header>
+					<div class="max-w-2xl mx-auto bg-white shadow-lg rounded-2xl p-8 text-center">
+						<h1 class="text-4xl font-bold text-blue-900 mb-2">
+							{schoolData.title}
+						</h1>
+						<p class="text-gray-600 text-lg italic">
+							{schoolData.description}
+						</p>
 
-					<hr class="my-6 border-gray-200" />
+						<hr class="my-6 border-gray-200" />
 
-					<div class="text-sm text-green-600 font-semibold uppercase tracking-widest">
-						🚀 เชื่อมต่อ WordPress สำเร็จแล้ว!
+						<div class="text-sm text-green-600 font-semibold uppercase tracking-widest color-red-500">
+							🚀 เชื่อมต่อ WordPress สำเร็จแล้ว!
+						</div>
 					</div>
-				</div>
-			)
-		}
-	</body>
-</html>
+				</header>
+
+				<article class="mb-30 w-[100%] flex justify-center">
+					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mx-10">
+						{posts.map((post: PostType) => (
+							<NewsCard
+								title={post.title}
+								image={post.featuredImage?.node?.sourceUrl}
+								date={post.date}
+								slug={post.slug}
+							/>
+						))}
+					</div>
+				</article>
+			</>
+		)
+	}
+</Layout>
+<!-- </html> -->
