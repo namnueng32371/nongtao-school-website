@@ -1,7 +1,8 @@
 ---
 /*  import  */
 import Layout from "../layouts/Layout.astro";
-import NewsCard from "../components/NewsCard.astro";
+// import NewsCard from "../components/NewsCard.astro";
+import NewsCardJeng from "../components/NewsCard_Jeng.astro";
 
 /*  constants query   */
 const query = `
@@ -10,7 +11,7 @@ const query = `
             title
             description
         }
-        posts(first: 4) {
+        posts(first: 3) {
             nodes {
                 slug        
                 title   
@@ -86,35 +87,48 @@ console.log("เช็คpost: ", posts);
 	{
 		schoolData && (
 			<>
-				<header>
-					<div class="max-w-2xl mx-auto bg-white shadow-lg rounded-2xl p-8 text-center">
-						<h1 class="text-4xl font-bold text-blue-900 mb-2">
-							{schoolData.title}
-						</h1>
-						<p class="text-gray-600 text-lg italic">
-							{schoolData.description}
-						</p>
+				<div class="grid grid-cols-12 px-[80px] max-lg:px-[40px] gap-[20px] ">
+					<main class="col-span-9">
+						<header>
+							<div class="max-w-2xl mx-auto bg-white shadow-lg rounded-2xl p-8 text-center">
+								<h1 class="text-4xl font-bold text-blue-900 mb-2">
+									{schoolData.title}
+								</h1>
+								<p class="text-gray-600 text-lg italic">
+									{schoolData.description}
+								</p>
 
-						<hr class="my-6 border-gray-200" />
+								<hr class="my-6 border-gray-200" />
 
-						<div class="text-sm text-green-600 font-semibold uppercase tracking-widest color-red-500">
-							🚀 เชื่อมต่อ WordPress สำเร็จแล้ว!
+								<div class="text-sm text-green-600 font-semibold uppercase tracking-widest color-red-500">
+									🚀 เชื่อมต่อ WordPress สำเร็จแล้ว!
+								</div>
+							</div>
+						</header>
+						<div>
+							{/* <main class="mb-10 w-[100%] flex justify-center flex-col px-[80px] "> */}
+							<p class="text-[24px] font-[600] mb-4">
+								ข่าวประชาสัมพันธ์
+							</p>
+							<div class="gap-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+								{posts.map((post: PostType) => (
+									<NewsCardJeng
+										title={post.title}
+										image={
+											post.featuredImage?.node?.sourceUrl
+										}
+										date={post.date}
+										slug={post.slug}
+									/>
+								))}
+							</div>
 						</div>
-					</div>
-				</header>
+					</main>
 
-				<article class="mb-30 w-[100%] flex justify-center">
-					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mx-10">
-						{posts.map((post: PostType) => (
-							<NewsCard
-								title={post.title}
-								image={post.featuredImage?.node?.sourceUrl}
-								date={post.date}
-								slug={post.slug}
-							/>
-						))}
-					</div>
-				</article>
+					<aside class="col-span-3 rounded-xl flex justify-center items-center shadow-lg">
+						aside
+					</aside>
+				</div>
 			</>
 		)
 	}
